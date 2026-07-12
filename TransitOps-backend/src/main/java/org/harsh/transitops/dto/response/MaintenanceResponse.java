@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.harsh.transitops.enums.MaintenanceStatus;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,12 +14,11 @@ import java.time.LocalDateTime;
 public class MaintenanceResponse {
 
     private Long id;
-    private String issue;
+    private String type;
     private String description;
-    private MaintenanceStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime completedAt;
+    private String status;
     private Double cost;
+    private String startDate;
     private Long vehicleId;
     private String vehicleRegistrationNumber;
 }

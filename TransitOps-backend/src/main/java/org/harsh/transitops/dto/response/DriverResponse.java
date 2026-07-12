@@ -18,9 +18,12 @@ public class DriverResponse {
 
     private Long id;
     private String name;
+    private String email;
     private String licenseNumber;
     private LocalDate licenseExpiry;
     private String phone;
+    private String region;
+    private String licenseCategory;
     private Double safetyScore;
     private DriverStatus status;
 }

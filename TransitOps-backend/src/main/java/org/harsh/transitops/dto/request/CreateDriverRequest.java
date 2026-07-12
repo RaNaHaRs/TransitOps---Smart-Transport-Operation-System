@@ -38,4 +38,8 @@ public class CreateDriverRequest {
 
     @NotBlank
     private String password;
+
+    private String region;
+
+    private String licenseCategory;
 }

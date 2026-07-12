@@ -29,10 +29,21 @@ public class FuelLogServiceImpl implements FuelLogService {
     public List<FuelLogResponse> getFuelLogsByVehicle(Long vehicleId) { return fuelLogRepository.findByVehicleId(vehicleId).stream().map(this::toResponse).toList(); }
 
     private FuelLogResponse toResponse(FuelLog fuelLog) {
-        return FuelLogResponse.builder().id(fuelLog.getId()).fuelPrice(fuelLog.getFuelPrice())
-                .fuelUsed(fuelLog.getFuelUsed()).fuelCost(fuelLog.getFuelCost()).createdAt(fuelLog.getCreatedAt())
+        Double odometer = null;
+        if (fuelLog.getTrip() != null && fuelLog.getTrip().getStartingOdometer() != null) {
+            odometer = fuelLog.getTrip().getStartingOdometer();
+        } else if (fuelLog.getVehicle() != null && fuelLog.getVehicle().getCurrentOdometer() != null) {
+            odometer = fuelLog.getVehicle().getCurrentOdometer();
+        }
+        return FuelLogResponse.builder()
+                .id(fuelLog.getId())
+                .costPerLiter(fuelLog.getFuelPrice())
+                .liters(fuelLog.getFuelUsed())
+                .totalCost(fuelLog.getFuelCost())
+                .date(fuelLog.getCreatedAt() != null ? fuelLog.getCreatedAt().toLocalDate().toString() : null)
+                .odometer(odometer)
                 .tripId(fuelLog.getTrip() == null ? null : fuelLog.getTrip().getId())
                 .vehicleId(fuelLog.getVehicle() == null ? null : fuelLog.getVehicle().getId())
-                .vehicleRegistrationNumber(fuelLog.getVehicle() == null ? null : fuelLog.getVehicle().getRegistrationNumber()).build();
+                .build();
     }
 }

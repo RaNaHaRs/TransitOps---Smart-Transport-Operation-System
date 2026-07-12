@@ -1,5 +1,5 @@
 export const ROLE_CONFIG = {
-  FLEET_MANAGER: {
+  ADMIN: {
     label: 'Fleet Manager',
     dashboard: '/admin/dashboard',
     sidebar: [

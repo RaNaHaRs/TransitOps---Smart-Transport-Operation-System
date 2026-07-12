@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,11 +14,11 @@ import java.time.LocalDateTime;
 public class FuelLogResponse {
 
     private Long id;
-    private Double fuelPrice;
-    private Double fuelUsed;
-    private Double fuelCost;
-    private LocalDateTime createdAt;
+    private Double costPerLiter;
+    private Double liters;
+    private Double totalCost;
+    private String date;
+    private Double odometer;
     private Long tripId;
     private Long vehicleId;
-    private String vehicleRegistrationNumber;
 }

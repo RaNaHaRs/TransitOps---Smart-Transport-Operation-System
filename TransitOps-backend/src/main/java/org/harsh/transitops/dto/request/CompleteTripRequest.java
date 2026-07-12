@@ -17,6 +17,7 @@ public class CompleteTripRequest {
 
     @NotNull
     @Positive
-    private Double endingOdometer;
+    private Double endOdometer;
 
+    private Double fuelConsumed;
 }

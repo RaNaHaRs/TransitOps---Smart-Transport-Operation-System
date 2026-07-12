@@ -4,7 +4,7 @@ export const mockUsers = [
     name: 'Karan Mehta',
     email: 'fleet@transitops.in',
     password: 'fleet123',
-    role: 'FLEET_MANAGER',
+    role: 'ADMIN',
     avatar: null,
   },
   {

@@ -14,7 +14,14 @@ export async function login(email, password) {
     return { user: { id: user.id, name: user.name, email: user.email, role: user.role, driverId: user.driverId || null }, token };
   }
   const { data } = await api.post('/auth/login', { email, password });
-  return data;
+  const user = {
+    id: data.userId,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    driverId: data.driverId || null,
+  };
+  return { user, token: data.token };
 }
 
 export async function getMe() {
@@ -23,6 +30,13 @@ export async function getMe() {
     const raw = localStorage.getItem('transit_user');
     return raw ? JSON.parse(raw) : null;
   }
-  const { data } = await api.get('/auth/me');
-  return data;
+  const { data } = await api.get('/users/me');
+  const user = {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    driverId: data.driverId || null,
+  };
+  return user;
 }

@@ -39,13 +39,15 @@ public class DriverServiceImpl implements DriverService {
         }
         Driver driver = Driver.builder().name(request.getName()).licenseNumber(request.getLicenseNumber())
                 .licenseExpiry(request.getLicenseExpiry()).phone(request.getPhone())
+                .region(request.getRegion()).licenseCategory(request.getLicenseCategory())
+                .safetyScore(85.0)
                 .status(DriverStatus.AVAILABLE).build();
         Driver savedDriver = driverRepository.save(driver);
         User user = User.builder().name(savedDriver.getName()).email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword())).role(Role.DRIVER).driver(savedDriver).build();
         User savedUser = userRepository.save(user);
         savedDriver.setUser(savedUser);
-        return toResponse(savedDriver);
+        return toResponse(savedDriver, request.getEmail());
     }
 
     @Override
@@ -60,9 +62,12 @@ public class DriverServiceImpl implements DriverService {
         driver.setLicenseNumber(request.getLicenseNumber());
         driver.setLicenseExpiry(request.getLicenseExpiry());
         driver.setPhone(request.getPhone());
+        driver.setRegion(request.getRegion());
+        driver.setLicenseCategory(request.getLicenseCategory());
         driver.setSafetyScore(request.getSafetyScore());
         driver.setStatus(request.getStatus());
-        return toResponse(driverRepository.save(driver));
+        String email = userRepository.findByDriverId(id).map(User::getEmail).orElse(null);
+        return toResponse(driverRepository.save(driver), email);
     }
 
     @Override
@@ -81,28 +86,37 @@ public class DriverServiceImpl implements DriverService {
     @Override
     @Transactional(readOnly = true)
     public DriverResponse getDriverById(Long id) {
-        return toResponse(findDriver(id));
+        Driver driver = findDriver(id);
+        String email = userRepository.findByDriverId(id).map(User::getEmail).orElse(null);
+        return toResponse(driver, email);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<DriverResponse> getAllDrivers() {
-        return driverRepository.findAll().stream().map(this::toResponse).toList();
+        return driverRepository.findAll().stream().map(d -> {
+            String email = userRepository.findByDriverId(d.getId()).map(User::getEmail).orElse(null);
+            return toResponse(d, email);
+        }).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<DriverResponse> getAvailableDrivers() {
-        return driverRepository.findByStatus(DriverStatus.AVAILABLE).stream().map(this::toResponse).toList();
+        return driverRepository.findByStatus(DriverStatus.AVAILABLE).stream().map(d -> {
+            String email = userRepository.findByDriverId(d.getId()).map(User::getEmail).orElse(null);
+            return toResponse(d, email);
+        }).toList();
     }
 
     private Driver findDriver(Long id) {
         return driverRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Driver not found"));
     }
 
-    private DriverResponse toResponse(Driver driver) {
-        return DriverResponse.builder().id(driver.getId()).name(driver.getName())
+    private DriverResponse toResponse(Driver driver, String email) {
+        return DriverResponse.builder().id(driver.getId()).name(driver.getName()).email(email)
                 .licenseNumber(driver.getLicenseNumber()).licenseExpiry(driver.getLicenseExpiry())
-                .phone(driver.getPhone()).safetyScore(driver.getSafetyScore()).status(driver.getStatus()).build();
+                .phone(driver.getPhone()).region(driver.getRegion()).licenseCategory(driver.getLicenseCategory())
+                .safetyScore(driver.getSafetyScore()).status(driver.getStatus()).build();
     }
 }

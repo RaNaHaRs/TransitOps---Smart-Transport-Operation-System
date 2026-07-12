@@ -1,16 +1,11 @@
 package org.harsh.transitops.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.harsh.transitops.enums.MaintenanceStatus;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,16 +14,14 @@ import java.time.LocalDateTime;
 @Builder
 public class UpdateMaintenanceRequest {
 
-    @NotBlank
-    private String issue;
+    private String type;
 
     private String description;
 
     @NotNull
-    private MaintenanceStatus status;
+    private String status;
 
-    @Positive
     private Double cost;
 
-    private LocalDateTime completedAt;
+    private String startDate;
 }

@@ -41,16 +41,21 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional
     public TripResponse createTrip(CreateTripRequest request) {
-        if (tripRepository.existsByTripCode(request.getTripCode())) {
+        String tripCode = request.getTripCode();
+        if (tripCode == null || tripCode.isBlank()) {
+            tripCode = "TRIP-" + System.currentTimeMillis();
+        }
+        if (tripRepository.existsByTripCode(tripCode)) {
             throw new IllegalStateException("Trip code already exists");
         }
         Vehicle vehicle = findVehicle(request.getVehicleId());
         Driver driver = findDriver(request.getDriverId());
         validateTripAssignment(vehicle, driver, request.getCargoWeight());
 
-        Trip trip = Trip.builder().tripCode(request.getTripCode()).source(request.getSource())
+        Trip trip = Trip.builder().tripCode(tripCode).source(request.getSource())
                 .destination(request.getDestination()).cargoWeight(request.getCargoWeight())
                 .plannedDistance(request.getPlannedDistance()).status(TripStatus.CREATED)
+                .createdAt(LocalDateTime.now())
                 .vehicle(vehicle).driver(driver).build();
         return toResponse(tripRepository.save(trip));
     }
@@ -62,12 +67,16 @@ public class TripServiceImpl implements TripService {
         if (trip.getStatus() != TripStatus.CREATED) {
             throw new IllegalStateException("Only created trips can be dispatched");
         }
-        if (!trip.getVehicle().getId().equals(request.getVehicleId()) || !trip.getDriver().getId().equals(request.getDriverId())) {
+        Long vehicleId = request.getVehicleId() != null ? request.getVehicleId() : trip.getVehicle().getId();
+        Long driverId = request.getDriverId() != null ? request.getDriverId() : trip.getDriver().getId();
+        if (!trip.getVehicle().getId().equals(vehicleId) || !trip.getDriver().getId().equals(driverId)) {
             throw new IllegalArgumentException("Dispatch assignment must match the trip assignment");
         }
         validateTripAssignment(trip.getVehicle(), trip.getDriver(), trip.getCargoWeight());
-        trip.setStartingOdometer(request.getStartingOdometer());
-        trip.setStartTime(request.getStartTime());
+        if (request.getStartingOdometer() != null) {
+            trip.setStartingOdometer(request.getStartingOdometer());
+        }
+        trip.setStartTime(request.getStartTime() != null ? request.getStartTime() : LocalDateTime.now());
         trip.setStatus(TripStatus.DISPATCHED);
         trip.getVehicle().setStatus(VehicleStatus.ON_TRIP);
         trip.getDriver().setStatus(DriverStatus.ON_TRIP);
@@ -83,28 +92,36 @@ public class TripServiceImpl implements TripService {
         if (trip.getStatus() != TripStatus.DISPATCHED || trip.getStartingOdometer() == null) {
             throw new IllegalStateException("Only dispatched trips can be completed");
         }
-        double distance = request.getEndingOdometer() - trip.getStartingOdometer();
-        if (distance < 0 || trip.getVehicle().getMileage() == null || trip.getVehicle().getMileage() <= 0) {
-            throw new IllegalStateException("Trip odometer or vehicle mileage is invalid");
+        double distance = request.getEndOdometer() - trip.getStartingOdometer();
+        double fuelUsed;
+        double fuelCost;
+        if (request.getFuelConsumed() != null && request.getFuelConsumed() > 0) {
+            fuelUsed = request.getFuelConsumed();
+            Double fuelPrice = fuelSettingRepository.findTopByOrderByIdDesc().map(setting -> setting.getFuelPrice()).orElse(0.0);
+            fuelCost = fuelUsed * fuelPrice;
+        } else {
+            if (distance < 0 || trip.getVehicle().getMileage() == null || trip.getVehicle().getMileage() <= 0) {
+                throw new IllegalStateException("Trip odometer or vehicle mileage is invalid");
+            }
+            fuelUsed = distance / trip.getVehicle().getMileage();
+            Double fuelPrice = fuelSettingRepository.findTopByOrderByIdDesc().map(setting -> setting.getFuelPrice())
+                    .orElseThrow(() -> new IllegalStateException("Fuel price has not been configured"));
+            fuelCost = fuelUsed * fuelPrice;
         }
-        double fuelUsed = distance / trip.getVehicle().getMileage();
-        double fuelPrice = fuelSettingRepository.findTopByOrderByIdDesc().map(setting -> setting.getFuelPrice())
-                .orElseThrow(() -> new IllegalStateException("Fuel price has not been configured"));
-        double fuelCost = fuelUsed * fuelPrice;
 
-        trip.setEndingOdometer(request.getEndingOdometer());
+        trip.setEndingOdometer(request.getEndOdometer());
         trip.setFuelUsed(fuelUsed);
         trip.setFuelCost(fuelCost);
         trip.setEndTime(LocalDateTime.now());
         trip.setStatus(TripStatus.COMPLETED);
-        trip.getVehicle().setCurrentOdometer(request.getEndingOdometer());
+        trip.getVehicle().setCurrentOdometer(request.getEndOdometer());
         trip.getVehicle().setStatus(VehicleStatus.AVAILABLE);
         trip.getDriver().setStatus(DriverStatus.AVAILABLE);
 
         Trip savedTrip = tripRepository.save(trip);
         vehicleRepository.save(savedTrip.getVehicle());
         driverRepository.save(savedTrip.getDriver());
-        fuelLogRepository.save(FuelLog.builder().fuelPrice(fuelPrice).fuelUsed(fuelUsed).fuelCost(fuelCost)
+        fuelLogRepository.save(FuelLog.builder().fuelPrice(0.0).fuelUsed(fuelUsed).fuelCost(fuelCost)
                 .createdAt(LocalDateTime.now()).trip(savedTrip).vehicle(savedTrip.getVehicle()).build());
         expenseRepository.save(Expense.builder().expenseType("FUEL").amount(fuelCost)
                 .description("Fuel expense for trip " + savedTrip.getTripCode()).expenseDate(LocalDateTime.now())
@@ -160,11 +177,27 @@ public class TripServiceImpl implements TripService {
     private Driver findDriver(Long id) { return driverRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Driver not found")); }
 
     private TripResponse toResponse(Trip trip) {
-        return TripResponse.builder().id(trip.getId()).tripCode(trip.getTripCode()).source(trip.getSource())
-                .destination(trip.getDestination()).cargoWeight(trip.getCargoWeight()).plannedDistance(trip.getPlannedDistance())
-                .startingOdometer(trip.getStartingOdometer()).endingOdometer(trip.getEndingOdometer())
-                .fuelUsed(trip.getFuelUsed()).fuelCost(trip.getFuelCost()).status(trip.getStatus())
-                .startTime(trip.getStartTime()).endTime(trip.getEndTime()).driverName(trip.getDriver().getName())
-                .vehicleRegistrationNumber(trip.getVehicle().getRegistrationNumber()).build();
+        Double actualDistance = null;
+        if (trip.getStartingOdometer() != null && trip.getEndingOdometer() != null) {
+            actualDistance = trip.getEndingOdometer() - trip.getStartingOdometer();
+        }
+        return TripResponse.builder()
+                .id(trip.getId())
+                .tripCode(trip.getTripCode())
+                .source(trip.getSource())
+                .destination(trip.getDestination())
+                .vehicleId(trip.getVehicle().getId())
+                .driverId(trip.getDriver().getId())
+                .cargoWeight(trip.getCargoWeight())
+                .plannedDistance(trip.getPlannedDistance())
+                .startOdometer(trip.getStartingOdometer())
+                .endOdometer(trip.getEndingOdometer())
+                .fuelConsumed(trip.getFuelUsed())
+                .actualDistance(actualDistance)
+                .status(trip.getStatus().getLabel())
+                .createdAt(trip.getCreatedAt() != null ? trip.getCreatedAt().toLocalDate().toString() : null)
+                .dispatchedAt(trip.getStartTime() != null ? trip.getStartTime().toLocalDate().toString() : null)
+                .completedAt(trip.getEndTime() != null ? trip.getEndTime().toLocalDate().toString() : null)
+                .build();
     }
 }

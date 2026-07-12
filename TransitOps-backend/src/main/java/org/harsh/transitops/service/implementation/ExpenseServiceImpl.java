@@ -29,9 +29,21 @@ public class ExpenseServiceImpl implements ExpenseService {
     public List<ExpenseResponse> getExpensesByMaintenance(Long maintenanceId) { return expenseRepository.findByMaintenanceId(maintenanceId).stream().map(this::toResponse).toList(); }
 
     private ExpenseResponse toResponse(Expense expense) {
-        return ExpenseResponse.builder().id(expense.getId()).expenseType(expense.getExpenseType())
-                .amount(expense.getAmount()).description(expense.getDescription()).expenseDate(expense.getExpenseDate())
+        Long vehicleId = null;
+        if (expense.getTrip() != null && expense.getTrip().getVehicle() != null) {
+            vehicleId = expense.getTrip().getVehicle().getId();
+        } else if (expense.getMaintenance() != null && expense.getMaintenance().getVehicle() != null) {
+            vehicleId = expense.getMaintenance().getVehicle().getId();
+        }
+        return ExpenseResponse.builder()
+                .id(expense.getId())
+                .type(expense.getExpenseType())
+                .amount(expense.getAmount())
+                .description(expense.getDescription())
+                .date(expense.getExpenseDate() != null ? expense.getExpenseDate().toLocalDate().toString() : null)
+                .vehicleId(vehicleId)
                 .tripId(expense.getTrip() == null ? null : expense.getTrip().getId())
-                .maintenanceId(expense.getMaintenance() == null ? null : expense.getMaintenance().getId()).build();
+                .maintenanceId(expense.getMaintenance() == null ? null : expense.getMaintenance().getId())
+                .build();
     }
 }

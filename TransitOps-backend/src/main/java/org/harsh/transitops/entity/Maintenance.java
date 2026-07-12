@@ -43,6 +43,8 @@ public class Maintenance {
     @NotBlank
     private String issue;
 
+    private String type;
+
     private String description;
 
     @NotNull

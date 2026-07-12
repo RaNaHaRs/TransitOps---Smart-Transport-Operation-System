@@ -21,7 +21,12 @@ public class CreateMaintenanceRequest {
     private Long vehicleId;
 
     @NotBlank
-    private String issue;
+    private String type;
 
     private String description;
+
+    @Positive
+    private Double cost;
+
+    private String startDate;
 }

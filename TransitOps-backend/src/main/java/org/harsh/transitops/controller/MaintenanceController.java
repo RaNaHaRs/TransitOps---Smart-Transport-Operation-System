@@ -34,5 +34,8 @@ public class MaintenanceController {
     public ResponseEntity<MaintenanceResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateMaintenanceRequest request) { return ResponseEntity.ok(maintenanceService.updateMaintenance(id, request)); }
 
     @PutMapping("/complete/{id}")
-    public ResponseEntity<MaintenanceResponse> complete(@PathVariable Long id, @RequestParam @Positive Double cost) { return ResponseEntity.ok(maintenanceService.completeMaintenance(id, cost)); }
+    public ResponseEntity<MaintenanceResponse> complete(@PathVariable Long id, @RequestParam(required = false) @Positive Double cost) { return ResponseEntity.ok(maintenanceService.completeMaintenance(id, cost)); }
+
+    @PutMapping("/{id}/close")
+    public ResponseEntity<MaintenanceResponse> close(@PathVariable Long id) { return ResponseEntity.ok(maintenanceService.completeMaintenance(id, null)); }
 }

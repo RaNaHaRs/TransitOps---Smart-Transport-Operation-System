@@ -32,9 +32,11 @@ public class VehicleServiceImpl implements VehicleService {
                 .registrationNumber(request.getRegistrationNumber())
                 .vehicleName(request.getVehicleName())
                 .vehicleType(request.getVehicleType())
-                .capacity(request.getCapacity())
+                .capacity(request.getMaximumLoadCapacity())
                 .mileage(request.getMileage())
-                .currentOdometer(request.getCurrentOdometer())
+                .currentOdometer(request.getCurrentOdometer() != null ? request.getCurrentOdometer() : 0.0)
+                .region(request.getRegion())
+                .acquisitionCost(request.getAcquisitionCost())
                 .status(VehicleStatus.AVAILABLE)
                 .build();
         return toResponse(vehicleRepository.save(vehicle));
@@ -51,9 +53,11 @@ public class VehicleServiceImpl implements VehicleService {
         vehicle.setRegistrationNumber(request.getRegistrationNumber());
         vehicle.setVehicleName(request.getVehicleName());
         vehicle.setVehicleType(request.getVehicleType());
-        vehicle.setCapacity(request.getCapacity());
+        vehicle.setCapacity(request.getMaximumLoadCapacity());
         vehicle.setMileage(request.getMileage());
         vehicle.setCurrentOdometer(request.getCurrentOdometer());
+        vehicle.setRegion(request.getRegion());
+        vehicle.setAcquisitionCost(request.getAcquisitionCost());
         vehicle.setStatus(request.getStatus());
         return toResponse(vehicleRepository.save(vehicle));
     }
@@ -97,7 +101,8 @@ public class VehicleServiceImpl implements VehicleService {
         return VehicleResponse.builder()
                 .id(vehicle.getId()).registrationNumber(vehicle.getRegistrationNumber())
                 .vehicleName(vehicle.getVehicleName()).vehicleType(vehicle.getVehicleType())
-                .capacity(vehicle.getCapacity()).mileage(vehicle.getMileage())
-                .currentOdometer(vehicle.getCurrentOdometer()).status(vehicle.getStatus()).build();
+                .maximumLoadCapacity(vehicle.getCapacity()).mileage(vehicle.getMileage())
+                .currentOdometer(vehicle.getCurrentOdometer()).region(vehicle.getRegion())
+                .acquisitionCost(vehicle.getAcquisitionCost()).status(vehicle.getStatus()).build();
     }
 }

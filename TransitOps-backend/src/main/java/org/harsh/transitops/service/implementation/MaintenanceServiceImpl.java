@@ -16,7 +16,9 @@ import org.harsh.transitops.service.interfaces.MaintenanceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -34,8 +36,23 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
         vehicle.setStatus(VehicleStatus.IN_MAINTENANCE);
         vehicleRepository.save(vehicle);
-        Maintenance maintenance = Maintenance.builder().issue(request.getIssue()).description(request.getDescription())
-                .status(MaintenanceStatus.PENDING).createdAt(LocalDateTime.now()).vehicle(vehicle).build();
+
+        LocalDateTime startDate = null;
+        if (request.getStartDate() != null && !request.getStartDate().isBlank()) {
+            try {
+                startDate = LocalDate.parse(request.getStartDate()).atStartOfDay();
+            } catch (Exception ignored) {}
+        }
+
+        Maintenance maintenance = Maintenance.builder()
+                .type(request.getType())
+                .issue(request.getType())
+                .description(request.getDescription())
+                .cost(request.getCost())
+                .status(MaintenanceStatus.PENDING)
+                .createdAt(startDate != null ? startDate : LocalDateTime.now())
+                .vehicle(vehicle)
+                .build();
         return toResponse(maintenanceRepository.save(maintenance));
     }
 
@@ -43,11 +60,20 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Transactional
     public MaintenanceResponse updateMaintenance(Long id, UpdateMaintenanceRequest request) {
         Maintenance maintenance = findMaintenance(id);
-        maintenance.setIssue(request.getIssue());
-        maintenance.setDescription(request.getDescription());
-        maintenance.setStatus(request.getStatus());
-        maintenance.setCost(request.getCost());
-        maintenance.setCompletedAt(request.getCompletedAt());
+        if (request.getType() != null) {
+            maintenance.setType(request.getType());
+            maintenance.setIssue(request.getType());
+        }
+        if (request.getDescription() != null) maintenance.setDescription(request.getDescription());
+        if (request.getCost() != null) maintenance.setCost(request.getCost());
+        if (request.getStatus() != null) {
+            maintenance.setStatus(MaintenanceStatus.valueOf(request.getStatus()));
+        }
+        if (request.getStartDate() != null) {
+            try {
+                maintenance.setCreatedAt(LocalDate.parse(request.getStartDate()).atStartOfDay());
+            } catch (Exception ignored) {}
+        }
         return toResponse(maintenanceRepository.save(maintenance));
     }
 
@@ -60,12 +86,12 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         }
         maintenance.setStatus(MaintenanceStatus.COMPLETED);
         maintenance.setCompletedAt(LocalDateTime.now());
-        maintenance.setCost(cost);
+        if (cost != null) maintenance.setCost(cost);
         maintenance.getVehicle().setStatus(VehicleStatus.AVAILABLE);
         vehicleRepository.save(maintenance.getVehicle());
         Maintenance saved = maintenanceRepository.save(maintenance);
-        if (cost != null && cost > 0) {
-            expenseRepository.save(Expense.builder().expenseType("MAINTENANCE").amount(cost)
+        if (saved.getCost() != null && saved.getCost() > 0) {
+            expenseRepository.save(Expense.builder().expenseType("MAINTENANCE").amount(saved.getCost())
                     .description("Maintenance expense: " + saved.getIssue()).expenseDate(LocalDateTime.now())
                     .maintenance(saved).build());
         }
@@ -85,9 +111,15 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     }
 
     private MaintenanceResponse toResponse(Maintenance maintenance) {
-        return MaintenanceResponse.builder().id(maintenance.getId()).issue(maintenance.getIssue())
-                .description(maintenance.getDescription()).status(maintenance.getStatus()).createdAt(maintenance.getCreatedAt())
-                .completedAt(maintenance.getCompletedAt()).cost(maintenance.getCost()).vehicleId(maintenance.getVehicle().getId())
-                .vehicleRegistrationNumber(maintenance.getVehicle().getRegistrationNumber()).build();
+        return MaintenanceResponse.builder()
+                .id(maintenance.getId())
+                .type(maintenance.getType())
+                .description(maintenance.getDescription())
+                .status(maintenance.getStatus() == MaintenanceStatus.PENDING ? "Open" : "Closed")
+                .cost(maintenance.getCost())
+                .startDate(maintenance.getCreatedAt() != null ? maintenance.getCreatedAt().toLocalDate().toString() : null)
+                .vehicleId(maintenance.getVehicle().getId())
+                .vehicleRegistrationNumber(maintenance.getVehicle().getRegistrationNumber())
+                .build();
     }
 }

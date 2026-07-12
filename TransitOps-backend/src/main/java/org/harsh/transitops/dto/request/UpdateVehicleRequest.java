@@ -29,13 +29,15 @@ public class UpdateVehicleRequest {
 
     @NotNull
     @Positive
-    private Double capacity;
+    private Double maximumLoadCapacity;
 
-    @Positive
     private Double mileage;
 
-    @Positive
     private Double currentOdometer;
+
+    private String region;
+
+    private Double acquisitionCost;
 
     @NotNull
     private VehicleStatus status;

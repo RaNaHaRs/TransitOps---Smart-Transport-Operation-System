@@ -43,7 +43,7 @@ export default function App() {
           {/* Fleet Manager routes */}
           <Route
             element={
-              <PrivateRoute allowedRoles={['FLEET_MANAGER']}>
+              <PrivateRoute allowedRoles={['ADMIN']}>
                 <DashboardLayout />
               </PrivateRoute>
             }

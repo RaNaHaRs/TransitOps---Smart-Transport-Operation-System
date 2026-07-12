@@ -54,6 +54,9 @@ public class Driver {
     @NotBlank
     private String phone;
 
+    private String region;
+    private String licenseCategory;
+
     private Double safetyScore;
 
     @NotNull

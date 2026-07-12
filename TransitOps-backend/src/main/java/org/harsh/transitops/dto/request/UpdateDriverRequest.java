@@ -33,6 +33,10 @@ public class UpdateDriverRequest {
     @NotBlank
     private String phone;
 
+    private String region;
+
+    private String licenseCategory;
+
     @Positive
     private Double safetyScore;
 

@@ -6,6 +6,23 @@ import api from './api';
 // In-memory store so mutations persist through the session
 let vehicles = [...mockVehicles];
 
+function mapVehicleFromBackend(v) {
+  if (!v) return null;
+  return {
+    ...v,
+    type: v.vehicleType, // Backend uses vehicleType, frontend uses type
+  };
+}
+
+function mapVehicleToBackend(v) {
+  if (!v) return null;
+  const { type, ...rest } = v;
+  return {
+    ...rest,
+    vehicleType: type,
+  };
+}
+
 function applyFilters(list, { status, type, search } = {}) {
   return list.filter((v) => {
     if (status && v.status !== status) return false;
@@ -28,8 +45,9 @@ export async function getVehicles(filters = {}) {
     await simulateDelay();
     return applyFilters(vehicles, filters);
   }
-  const { data } = await api.get('/vehicles', { params: filters });
-  return data;
+  const { data } = await api.get('/vehicles');
+  const mapped = data.map(mapVehicleFromBackend);
+  return applyFilters(mapped, filters);
 }
 
 export async function getVehicleById(id) {
@@ -38,7 +56,7 @@ export async function getVehicleById(id) {
     return vehicles.find((v) => v.id === id) || null;
   }
   const { data } = await api.get(`/vehicles/${id}`);
-  return data;
+  return mapVehicleFromBackend(data);
 }
 
 export async function createVehicle(vehicleData) {
@@ -48,8 +66,9 @@ export async function createVehicle(vehicleData) {
     vehicles = [newVehicle, ...vehicles];
     return newVehicle;
   }
-  const { data } = await api.post('/vehicles', vehicleData);
-  return data;
+  const backendPayload = mapVehicleToBackend(vehicleData);
+  const { data } = await api.post('/vehicles', backendPayload);
+  return mapVehicleFromBackend(data);
 }
 
 export async function updateVehicle(id, vehicleData) {
@@ -58,8 +77,9 @@ export async function updateVehicle(id, vehicleData) {
     vehicles = vehicles.map((v) => (v.id === id ? { ...v, ...vehicleData } : v));
     return vehicles.find((v) => v.id === id);
   }
-  const { data } = await api.put(`/vehicles/${id}`, vehicleData);
-  return data;
+  const backendPayload = mapVehicleToBackend(vehicleData);
+  const { data } = await api.put(`/vehicles/${id}`, backendPayload);
+  return mapVehicleFromBackend(data);
 }
 
 export async function deleteVehicle(id) {
@@ -79,3 +99,4 @@ export async function updateVehicleStatus(id, status) {
 export function getVehiclesSync() {
   return vehicles;
 }
+

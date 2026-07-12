@@ -16,7 +16,6 @@ import lombok.Setter;
 @Builder
 public class CreateTripRequest {
 
-    @NotBlank
     private String tripCode;
 
     @NotBlank

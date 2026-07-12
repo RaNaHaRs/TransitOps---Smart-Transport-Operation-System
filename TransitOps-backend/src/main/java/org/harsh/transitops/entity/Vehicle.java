@@ -53,6 +53,8 @@ public class Vehicle {
     private Double capacity;
     private Double mileage;
     private Double currentOdometer;
+    private String region;
+    private Double acquisitionCost;
 
     @NotNull
     @Enumerated(EnumType.STRING)

@@ -28,13 +28,25 @@ public class TripController {
     @GetMapping("/{id}")
     public ResponseEntity<TripResponse> getById(@PathVariable Long id) { return ResponseEntity.ok(tripService.getTripById(id)); }
 
-    @PutMapping("/dispatch/{id}")
-    public ResponseEntity<TripResponse> dispatch(@PathVariable Long id, @Valid @RequestBody DispatchTripRequest request) { return ResponseEntity.ok(tripService.dispatchTrip(id, request)); }
+    @PutMapping("/{id}/dispatch")
+    public ResponseEntity<TripResponse> dispatch(@PathVariable Long id,
+            @RequestBody(required = false) DispatchTripRequest request) {
+        if (request == null) {
+            request = DispatchTripRequest.builder().build();
+        }
+        return ResponseEntity.ok(tripService.dispatchTrip(id, request));
+    }
 
-    @PutMapping("/complete/{id}")
-    public ResponseEntity<TripResponse> complete(@PathVariable Long id, @Valid @RequestBody CompleteTripRequest request) { return ResponseEntity.ok(tripService.completeTrip(id, request)); }
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<TripResponse> complete(@PathVariable Long id,
+            @RequestBody(required = false) CompleteTripRequest request) {
+        if (request == null) {
+            request = CompleteTripRequest.builder().build();
+        }
+        return ResponseEntity.ok(tripService.completeTrip(id, request));
+    }
 
-    @PutMapping("/cancel/{id}")
+    @PutMapping("/{id}/cancel")
     public ResponseEntity<TripResponse> cancel(@PathVariable Long id) { return ResponseEntity.ok(tripService.cancelTrip(id)); }
 
     @GetMapping("/driver/{driverId}")

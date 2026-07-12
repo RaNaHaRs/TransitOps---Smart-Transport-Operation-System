@@ -62,6 +62,7 @@ public class Trip {
     @Enumerated(EnumType.STRING)
     private TripStatus status;
 
+    private LocalDateTime createdAt;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 

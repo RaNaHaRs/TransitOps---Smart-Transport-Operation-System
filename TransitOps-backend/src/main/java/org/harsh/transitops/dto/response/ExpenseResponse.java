@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,10 +14,11 @@ import java.time.LocalDateTime;
 public class ExpenseResponse {
 
     private Long id;
-    private String expenseType;
+    private String type;
     private Double amount;
     private String description;
-    private LocalDateTime expenseDate;
+    private String date;
+    private Long vehicleId;
     private Long tripId;
     private Long maintenanceId;
 }

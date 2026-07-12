@@ -19,8 +19,10 @@ public class VehicleResponse {
     private String registrationNumber;
     private String vehicleName;
     private VehicleType vehicleType;
-    private Double capacity;
+    private Double maximumLoadCapacity;
     private Double mileage;
     private Double currentOdometer;
+    private String region;
+    private Double acquisitionCost;
     private VehicleStatus status;
 }
