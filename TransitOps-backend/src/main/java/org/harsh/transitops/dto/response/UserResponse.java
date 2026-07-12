@@ -12,10 +12,9 @@ import org.harsh.transitops.enums.Role;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponse {
+public class UserResponse {
 
-    private String token;
-    private Long userId;
+    private Long id;
     private String name;
     private String email;
     private Role role;

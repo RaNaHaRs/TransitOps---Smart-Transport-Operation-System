@@ -7,6 +7,7 @@ import org.harsh.transitops.enums.Role;
 import org.harsh.transitops.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class DefaultAdminInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${transitops.bootstrap.admin.name}")
     private String adminName;
@@ -35,10 +37,10 @@ public class DefaultAdminInitializer implements CommandLineRunner {
         userRepository.save(User.builder()
                 .name(adminName)
                 .email(adminEmail)
-                .password(adminPassword)
+                .password(passwordEncoder.encode(adminPassword))
                 .role(Role.ADMIN)
                 .build());
 
-        log.info("Default admin account created. Email: {}, Password: {}", adminEmail, adminPassword);
+        log.info("Default admin account created for {}. Set its password through BOOTSTRAP_ADMIN_PASSWORD.", adminEmail);
     }
 }

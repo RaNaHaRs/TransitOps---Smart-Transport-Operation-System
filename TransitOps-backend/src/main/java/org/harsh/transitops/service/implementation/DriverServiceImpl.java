@@ -5,12 +5,16 @@ import org.harsh.transitops.dto.request.CreateDriverRequest;
 import org.harsh.transitops.dto.request.UpdateDriverRequest;
 import org.harsh.transitops.dto.response.DriverResponse;
 import org.harsh.transitops.entity.Driver;
+import org.harsh.transitops.entity.User;
+import org.harsh.transitops.enums.Role;
 import org.harsh.transitops.enums.DriverStatus;
 import org.harsh.transitops.enums.TripStatus;
 import org.harsh.transitops.repository.DriverRepository;
 import org.harsh.transitops.repository.TripRepository;
+import org.harsh.transitops.repository.UserRepository;
 import org.harsh.transitops.service.interfaces.DriverService;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -21,6 +25,8 @@ public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;
     private final TripRepository tripRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -28,10 +34,18 @@ public class DriverServiceImpl implements DriverService {
         if (driverRepository.existsByLicenseNumber(request.getLicenseNumber())) {
             throw new IllegalStateException("License number already exists");
         }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalStateException("Email already exists");
+        }
         Driver driver = Driver.builder().name(request.getName()).licenseNumber(request.getLicenseNumber())
                 .licenseExpiry(request.getLicenseExpiry()).phone(request.getPhone())
                 .status(DriverStatus.AVAILABLE).build();
-        return toResponse(driverRepository.save(driver));
+        Driver savedDriver = driverRepository.save(driver);
+        User user = User.builder().name(savedDriver.getName()).email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword())).role(Role.DRIVER).driver(savedDriver).build();
+        User savedUser = userRepository.save(user);
+        savedDriver.setUser(savedUser);
+        return toResponse(savedDriver);
     }
 
     @Override
@@ -60,6 +74,7 @@ public class DriverServiceImpl implements DriverService {
         if (activeTrip) {
             throw new IllegalStateException("Driver cannot be deleted while assigned to an active trip");
         }
+        userRepository.findByDriverId(id).ifPresent(userRepository::delete);
         driverRepository.delete(driver);
     }
 
