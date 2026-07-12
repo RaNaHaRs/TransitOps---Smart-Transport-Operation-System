@@ -1,0 +1,35 @@
+export const mockUsers = [
+  {
+    id: 'u1',
+    name: 'Karan Mehta',
+    email: 'fleet@transitops.in',
+    password: 'fleet123',
+    role: 'FLEET_MANAGER',
+    avatar: null,
+  },
+  {
+    id: 'u2',
+    name: 'Amit Singh',
+    email: 'driver@transitops.in',
+    password: 'driver123',
+    role: 'DRIVER',
+    driverId: 'd2',
+    avatar: null,
+  },
+  {
+    id: 'u3',
+    name: 'Priya Nair',
+    email: 'safety@transitops.in',
+    password: 'safety123',
+    role: 'SAFETY_OFFICER',
+    avatar: null,
+  },
+  {
+    id: 'u4',
+    name: 'Rohit Gupta',
+    email: 'finance@transitops.in',
+    password: 'finance123',
+    role: 'FINANCIAL_ANALYST',
+    avatar: null,
+  },
+];

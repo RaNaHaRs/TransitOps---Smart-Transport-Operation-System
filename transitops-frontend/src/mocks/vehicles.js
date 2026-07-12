@@ -1,0 +1,17 @@
+export const mockVehicles = [
+  { id: 'v1', registrationNumber: 'MH-12-AB-4521', vehicleName: 'Ashok Leyland Dost', type: 'Mini-Truck', maximumLoadCapacity: 900, currentOdometer: 48320, acquisitionCost: 850000, status: 'Available', region: 'Mumbai' },
+  { id: 'v2', registrationNumber: 'DL-01-CG-7832', vehicleName: 'Tata Ace Gold', type: 'Mini-Truck', maximumLoadCapacity: 750, currentOdometer: 72540, acquisitionCost: 720000, status: 'On Trip', region: 'Delhi' },
+  { id: 'v3', registrationNumber: 'KA-04-MZ-1190', vehicleName: 'Mahindra Supro', type: 'Van', maximumLoadCapacity: 600, currentOdometer: 31780, acquisitionCost: 680000, status: 'Available', region: 'Bangalore' },
+  { id: 'v4', registrationNumber: 'MH-14-EK-6644', vehicleName: 'Eicher Pro 2049', type: 'Truck', maximumLoadCapacity: 1800, currentOdometer: 112000, acquisitionCost: 1450000, status: 'In Shop', region: 'Pune' },
+  { id: 'v5', registrationNumber: 'GJ-05-BZ-3312', vehicleName: 'Tata 407', type: 'Truck', maximumLoadCapacity: 2000, currentOdometer: 98450, acquisitionCost: 1650000, status: 'Available', region: 'Ahmedabad' },
+  { id: 'v6', registrationNumber: 'RJ-14-QW-8821', vehicleName: 'Force Traveller Cargo', type: 'Van', maximumLoadCapacity: 500, currentOdometer: 55600, acquisitionCost: 760000, status: 'On Trip', region: 'Jaipur' },
+  { id: 'v7', registrationNumber: 'TN-22-XP-4410', vehicleName: 'Piaggio Ape Truk Plus', type: 'Mini-Truck', maximumLoadCapacity: 300, currentOdometer: 41250, acquisitionCost: 390000, status: 'Available', region: 'Chennai' },
+  { id: 'v8', registrationNumber: 'UP-80-CD-9920', vehicleName: 'Mahindra Bolero Pickup', type: 'Mini-Truck', maximumLoadCapacity: 800, currentOdometer: 63810, acquisitionCost: 920000, status: 'Available', region: 'Lucknow' },
+  { id: 'v9', registrationNumber: 'HR-10-FT-2275', vehicleName: 'Isuzu D-Max', type: 'Truck', maximumLoadCapacity: 1200, currentOdometer: 87320, acquisitionCost: 1380000, status: 'In Shop', region: 'Gurgaon' },
+  { id: 'v10', registrationNumber: 'MH-43-NR-5568', vehicleName: 'Maruti Super Carry', type: 'Mini-Truck', maximumLoadCapacity: 400, currentOdometer: 28900, acquisitionCost: 510000, status: 'Available', region: 'Thane' },
+  { id: 'v11', registrationNumber: 'WB-06-PQ-7741', vehicleName: 'Tata LPT 1009', type: 'Truck', maximumLoadCapacity: 1600, currentOdometer: 145000, acquisitionCost: 1520000, status: 'Retired', region: 'Kolkata' },
+  { id: 'v12', registrationNumber: 'AP-31-VB-3358', vehicleName: 'BharatBenz 914R', type: 'Truck', maximumLoadCapacity: 1900, currentOdometer: 78200, acquisitionCost: 1780000, status: 'Available', region: 'Hyderabad' },
+  { id: 'v13', registrationNumber: 'PB-65-ZL-1130', vehicleName: 'Mahindra Jeeto Plus', type: 'Mini-Truck', maximumLoadCapacity: 350, currentOdometer: 19450, acquisitionCost: 480000, status: 'Available', region: 'Ludhiana' },
+  { id: 'v14', registrationNumber: 'MH-04-AK-6671', vehicleName: 'Tata Xenon XT', type: 'Truck', maximumLoadCapacity: 1400, currentOdometer: 93710, acquisitionCost: 1290000, status: 'On Trip', region: 'Mumbai' },
+  { id: 'v15', registrationNumber: 'KL-07-TH-2280', vehicleName: 'Ashok Leyland Boss', type: 'Van', maximumLoadCapacity: 700, currentOdometer: 38540, acquisitionCost: 830000, status: 'Available', region: 'Kochi' },
+];
