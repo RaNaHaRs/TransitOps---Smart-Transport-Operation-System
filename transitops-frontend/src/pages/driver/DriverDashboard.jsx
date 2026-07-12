@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Truck, Route, Clock } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getTrips } from '@/services/tripService';
-import { getVehiclesSync } from '@/services/vehicleService';
+import { getVehicles } from '@/services/vehicleService';
 import StatusBadge from '@/components/common/StatusBadge';
 import Loading from '@/components/common/Loading';
 import { formatDate } from '@/utils/helpers';
@@ -10,21 +10,32 @@ import { formatDate } from '@/utils/helpers';
 export default function DriverDashboard() {
   const { user } = useAuth();
   const [trips, setTrips] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.driverId) { setLoading(false); return; }
-    getTrips({ driverId: user.driverId }).then((data) => {
-      setTrips(data);
+    Promise.all([
+      getTrips({ driverId: user.driverId }),
+      getVehicles(),
+    ]).then(([tripsData, vehiclesData]) => {
+      setTrips(tripsData);
+      setVehicles(vehiclesData);
       setLoading(false);
     });
   }, [user]);
 
   if (loading) return <Loading />;
 
-  const todayTrip = trips.find((t) => t.status === 'Dispatched');
-  const vehicles = getVehiclesSync();
-  const assignedVehicle = todayTrip ? vehicles.find((v) => v.id === todayTrip.vehicleId) : null;
+  // Active trips = Draft or Dispatched (not completed/cancelled)
+  const activeTrips = trips.filter((t) => t.status === 'Draft' || t.status === 'Dispatched');
+  // First pending trip (Draft first, then Dispatched) to show assigned vehicle
+  const firstPendingTrip = trips.find((t) => t.status === 'Draft') || trips.find((t) => t.status === 'Dispatched');
+  const assignedVehicle = firstPendingTrip
+    ? vehicles.find((v) => Number(v.id) === Number(firstPendingTrip.vehicleId) || v.id === firstPendingTrip.vehicleId)
+    : null;
+  // Current trip for status: prefer Dispatched, else Draft
+  const currentTrip = trips.find((t) => t.status === 'Dispatched') || trips.find((t) => t.status === 'Draft');
 
   return (
     <div className="space-y-6">
@@ -50,14 +61,14 @@ export default function DriverDashboard() {
         <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center"><Route className="w-4 h-4 text-green-600" /></div>
-            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Active Trip</p>
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Active Trips</p>
           </div>
-          {todayTrip ? (
-            <>
-              <p className="font-bold text-neutral-900">{todayTrip.source} → {todayTrip.destination}</p>
-              <p className="text-xs text-neutral-400 mt-0.5">{todayTrip.plannedDistance} km planned</p>
-            </>
-          ) : <p className="text-sm text-neutral-400">No active trip</p>}
+          <p className="font-bold text-2xl text-neutral-900">{activeTrips.length}</p>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            {activeTrips.length === 0
+              ? 'No active trips'
+              : `${activeTrips.filter((t) => t.status === 'Dispatched').length} dispatched, ${activeTrips.filter((t) => t.status === 'Draft').length} pending`}
+          </p>
         </div>
 
         <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm">
@@ -65,7 +76,9 @@ export default function DriverDashboard() {
             <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center"><Clock className="w-4 h-4 text-amber-600" /></div>
             <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Trip Status</p>
           </div>
-          {todayTrip ? <StatusBadge status={todayTrip.status} /> : <p className="text-sm text-neutral-400">—</p>}
+          {currentTrip
+            ? <StatusBadge status={currentTrip.status} />
+            : <StatusBadge status="Arrived" />}
         </div>
       </div>
 

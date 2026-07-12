@@ -7,7 +7,7 @@ import EmptyState from '@/components/common/EmptyState';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import MaintenanceFormModal from '@/components/maintenance/MaintenanceFormModal';
 import { getMaintenance, closeMaintenance } from '@/services/maintenanceService';
-import { getVehiclesSync } from '@/services/vehicleService';
+import { getVehicles } from '@/services/vehicleService';
 import { formatDate, formatCurrency } from '@/utils/helpers';
 
 export default function MaintenancePage() {
@@ -20,9 +20,16 @@ export default function MaintenancePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getMaintenance({ status: statusFilter });
-      const vehicles = getVehiclesSync();
-      setRecords(data.map((r) => ({ ...r, vehicle: vehicles.find((v) => v.id === r.vehicleId) })));
+      const [maintenanceData, vehiclesData] = await Promise.all([
+        getMaintenance({ status: statusFilter }),
+        getVehicles(),
+      ]);
+      setRecords(
+        maintenanceData.map((r) => ({
+          ...r,
+          vehicle: vehiclesData.find((v) => Number(v.id) === Number(r.vehicleId) || v.id === r.vehicleId),
+        }))
+      );
     } catch { toast.error('Failed to load maintenance records'); }
     finally { setLoading(false); }
   }, [statusFilter]);

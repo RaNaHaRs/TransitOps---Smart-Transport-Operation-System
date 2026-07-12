@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createDriver, updateDriver } from '@/services/driverService';
@@ -10,16 +10,34 @@ export default function DriverFormModal({ isOpen, driver, onClose, onSaved }) {
   const isEditing = !!driver;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: driver?.name || '',
-    email: driver?.email || '',
-    phone: driver?.phone || '',
-    licenseNumber: driver?.licenseNumber || '',
-    licenseCategory: driver?.licenseCategory || 'HMV',
-    licenseExpiry: driver?.licenseExpiry || '',
-    safetyScore: driver?.safetyScore || 85,
-    region: driver?.region || 'Mumbai',
+    name: '',
+    email: '',
+    phone: '',
+    licenseNumber: '',
+    licenseCategory: 'HMV',
+    licenseExpiry: '',
+    safetyScore: 85,
+    region: 'Mumbai',
+    password: '',
   });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      setForm({
+        name: driver?.name || '',
+        email: driver?.email || '',
+        phone: driver?.phone || '',
+        licenseNumber: driver?.licenseNumber || '',
+        licenseCategory: driver?.licenseCategory || 'HMV',
+        licenseExpiry: driver?.licenseExpiry || '',
+        safetyScore: driver?.safetyScore || 85,
+        region: driver?.region || 'Mumbai',
+        password: '',
+      });
+      setErrors({});
+    }
+  }, [isOpen, driver]);
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -32,6 +50,9 @@ export default function DriverFormModal({ isOpen, driver, onClose, onSaved }) {
     if (!form.licenseNumber.trim()) errs.licenseNumber = 'License number is required';
     if (!form.licenseExpiry) errs.licenseExpiry = 'Expiry date is required';
     if (!form.email.trim() || !form.email.includes('@')) errs.email = 'Valid email required';
+    if (!isEditing && (!form.password || form.password.length < 6)) {
+      errs.password = 'Password must be at least 6 characters';
+    }
     return errs;
   }
 
@@ -41,7 +62,14 @@ export default function DriverFormModal({ isOpen, driver, onClose, onSaved }) {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
     try {
-      const payload = { ...form, safetyScore: Number(form.safetyScore) };
+      const payload = {
+        ...form,
+        safetyScore: Number(form.safetyScore),
+        status: driver?.status || 'Available',
+      };
+      if (isEditing) {
+        delete payload.password; // Do not send password on update
+      }
       if (isEditing) {
         await updateDriver(driver.id, payload);
         toast.success(`${form.name} updated`);
@@ -96,6 +124,15 @@ export default function DriverFormModal({ isOpen, driver, onClose, onSaved }) {
               </select>
             </div>
           </div>
+          {!isEditing && (
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">Password *</label>
+              <input value={form.password} onChange={(e) => set('password', e.target.value)} type="password"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Password (min 6 chars)" />
+              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1">License Number *</label>
             <input value={form.licenseNumber} onChange={(e) => set('licenseNumber', e.target.value)}

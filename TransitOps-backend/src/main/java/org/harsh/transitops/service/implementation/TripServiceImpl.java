@@ -75,6 +75,8 @@ public class TripServiceImpl implements TripService {
         validateTripAssignment(trip.getVehicle(), trip.getDriver(), trip.getCargoWeight());
         if (request.getStartingOdometer() != null) {
             trip.setStartingOdometer(request.getStartingOdometer());
+        } else {
+            trip.setStartingOdometer(trip.getVehicle().getCurrentOdometer() != null ? trip.getVehicle().getCurrentOdometer() : 0.0);
         }
         trip.setStartTime(request.getStartTime() != null ? request.getStartTime() : LocalDateTime.now());
         trip.setStatus(TripStatus.DISPATCHED);

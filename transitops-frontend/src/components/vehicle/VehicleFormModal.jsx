@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createVehicle, updateVehicle } from '@/services/vehicleService';
@@ -10,15 +10,30 @@ export default function VehicleFormModal({ isOpen, vehicle, onClose, onSaved }) 
   const isEditing = !!vehicle;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    vehicleName: vehicle?.vehicleName || '',
-    registrationNumber: vehicle?.registrationNumber || '',
-    type: vehicle?.type || 'Van',
-    maximumLoadCapacity: vehicle?.maximumLoadCapacity || '',
-    currentOdometer: vehicle?.currentOdometer || '',
-    acquisitionCost: vehicle?.acquisitionCost || '',
-    region: vehicle?.region || 'Mumbai',
+    vehicleName: '',
+    registrationNumber: '',
+    type: 'Van',
+    maximumLoadCapacity: '',
+    currentOdometer: '',
+    acquisitionCost: '',
+    region: 'Mumbai',
   });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      setForm({
+        vehicleName: vehicle?.vehicleName || '',
+        registrationNumber: vehicle?.registrationNumber || '',
+        type: vehicle?.type || 'Van',
+        maximumLoadCapacity: vehicle?.maximumLoadCapacity || '',
+        currentOdometer: vehicle?.currentOdometer || '',
+        acquisitionCost: vehicle?.acquisitionCost || '',
+        region: vehicle?.region || 'Mumbai',
+      });
+      setErrors({});
+    }
+  }, [isOpen, vehicle]);
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -45,6 +60,7 @@ export default function VehicleFormModal({ isOpen, vehicle, onClose, onSaved }) 
         maximumLoadCapacity: Number(form.maximumLoadCapacity),
         currentOdometer: Number(form.currentOdometer) || 0,
         acquisitionCost: Number(form.acquisitionCost),
+        status: vehicle?.status || 'Available',
       };
       if (isEditing) {
         await updateVehicle(vehicle.id, payload);

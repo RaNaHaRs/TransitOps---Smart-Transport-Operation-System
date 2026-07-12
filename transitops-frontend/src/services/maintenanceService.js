@@ -7,15 +7,17 @@ import api from './api';
 let records = [...mockMaintenance];
 
 export async function getMaintenance(filters = {}) {
+  let list = [];
   if (USE_MOCK_DATA) {
     await simulateDelay();
-    let list = [...records];
-    if (filters.status) list = list.filter((r) => r.status === filters.status);
-    if (filters.vehicleId) list = list.filter((r) => r.vehicleId === filters.vehicleId);
-    return list.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    list = [...records];
+  } else {
+    const { data } = await api.get('/maintenance');
+    list = data;
   }
-  const { data } = await api.get('/maintenance', { params: filters });
-  return data;
+  if (filters.status) list = list.filter((r) => r.status === filters.status);
+  if (filters.vehicleId) list = list.filter((r) => r.vehicleId === Number(filters.vehicleId) || r.vehicleId === filters.vehicleId);
+  return list.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
 }
 
 export async function createMaintenance(data) {
@@ -26,7 +28,11 @@ export async function createMaintenance(data) {
     await updateVehicleStatus(data.vehicleId, 'In Shop');
     return newRecord;
   }
-  const { data: res } = await api.post('/maintenance', data);
+  const payload = {
+    ...data,
+    vehicleId: Number(data.vehicleId),
+  };
+  const { data: res } = await api.post('/maintenance', payload);
   return res;
 }
 

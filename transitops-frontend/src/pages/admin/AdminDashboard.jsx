@@ -33,6 +33,14 @@ export default function AdminDashboard() {
         })
         .reduce((sum, f) => sum + f.totalCost, 0);
 
+      // Calculate revenue from completed trips: cargoWeight * actualDistance * 0.15 (Rs. 0.15 / kg / km)
+      const completedTrips = trips.filter((t) => t.status === 'Completed');
+      const totalRevenue = completedTrips.reduce((sum, t) => {
+        const dist = t.actualDistance || t.plannedDistance || 0;
+        const cargo = t.cargoWeight || 0;
+        return sum + (dist * cargo * 0.15);
+      }, 0);
+
       setData({
         totalVehicles: vehicles.length,
         availableVehicles: vehicles.filter((v) => v.status === 'Available').length,
@@ -40,6 +48,7 @@ export default function AdminDashboard() {
         inMaintenance: vehicles.filter((v) => v.status === 'In Shop').length,
         totalDrivers: drivers.length,
         monthFuelCost: monthFuel,
+        totalRevenue,
         recentTrips: trips.slice(0, 7),
         vehicles,
       });
@@ -58,13 +67,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
         <KPICard title="Total Vehicles" value={data.totalVehicles} icon={Truck} color="blue" />
         <KPICard title="Available" value={data.availableVehicles} icon={CheckCircle} color="green" />
         <KPICard title="Active Trips" value={data.activeTrips} icon={Route} color="blue" />
         <KPICard title="In Maintenance" value={data.inMaintenance} icon={Wrench} color="amber" />
         <KPICard title="Total Drivers" value={data.totalDrivers} icon={Users} color="purple" />
         <KPICard title="Fuel This Month" value={formatCurrency(data.monthFuelCost)} icon={DollarSign} color="slate" />
+        <KPICard title="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={DollarSign} color="green" />
       </div>
 
       {/* Vehicle Status Bar */}

@@ -23,8 +23,8 @@ export async function getDrivers(filters = {}) {
     await simulateDelay();
     return applyFilters(drivers, filters);
   }
-  const { data } = await api.get('/drivers', { params: filters });
-  return data;
+  const { data } = await api.get('/drivers');
+  return applyFilters(data, filters);
 }
 
 export async function getDriverById(id) {
@@ -43,7 +43,11 @@ export async function createDriver(driverData) {
     drivers = [newDriver, ...drivers];
     return newDriver;
   }
-  const { data } = await api.post('/drivers', driverData);
+  const payload = {
+    ...driverData,
+    password: driverData.password || 'Driver@123',
+  };
+  const { data } = await api.post('/drivers', payload);
   return data;
 }
 

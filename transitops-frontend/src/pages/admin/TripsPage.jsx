@@ -10,8 +10,8 @@ import CompleteTripModal from '@/components/trip/CompleteTripModal';
 import { getTrips, dispatchTrip, cancelTrip } from '@/services/tripService';
 import { formatDate, formatNumber } from '@/utils/helpers';
 import { useDebounce } from '@/hooks/useDebounce';
-import { getVehiclesSync } from '@/services/vehicleService';
-import { getDriversSync } from '@/services/driverService';
+import { getVehicles } from '@/services/vehicleService';
+import { getDrivers } from '@/services/driverService';
 
 export default function TripsPage() {
   const [trips, setTrips] = useState([]);
@@ -28,13 +28,15 @@ export default function TripsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getTrips({ status: statusFilter, search: debouncedSearch });
-      const vehicles = getVehiclesSync();
-      const drivers = getDriversSync();
-      const enriched = data.map((t) => ({
+      const [tripsData, vehiclesData, driversData] = await Promise.all([
+        getTrips({ status: statusFilter, search: debouncedSearch }),
+        getVehicles(),
+        getDrivers(),
+      ]);
+      const enriched = tripsData.map((t) => ({
         ...t,
-        vehicle: vehicles.find((v) => v.id === t.vehicleId),
-        driver: drivers.find((d) => d.id === t.driverId),
+        vehicle: vehiclesData.find((v) => Number(v.id) === Number(t.vehicleId) || v.id === t.vehicleId),
+        driver: driversData.find((d) => Number(d.id) === Number(t.driverId) || d.id === t.driverId),
       }));
       setTrips(enriched);
     } catch { toast.error('Failed to load trips'); }

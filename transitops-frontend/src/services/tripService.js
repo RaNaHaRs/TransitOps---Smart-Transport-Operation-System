@@ -10,7 +10,7 @@ let trips = [...mockTrips];
 function applyFilters(list, { status, search, driverId } = {}) {
   return list.filter((t) => {
     if (status && t.status !== status) return false;
-    if (driverId && t.driverId !== driverId) return false;
+    if (driverId && Number(t.driverId) !== Number(driverId) && t.driverId !== driverId) return false;
     if (search) {
       const q = search.toLowerCase();
       if (!t.source.toLowerCase().includes(q) && !t.destination.toLowerCase().includes(q)) return false;
@@ -20,13 +20,16 @@ function applyFilters(list, { status, search, driverId } = {}) {
 }
 
 export async function getTrips(filters = {}) {
+  let list = [];
   if (USE_MOCK_DATA) {
     await simulateDelay();
-    const sorted = [...trips].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    return applyFilters(sorted, filters);
+    list = [...trips];
+  } else {
+    const { data } = await api.get('/trips');
+    list = data;
   }
-  const { data } = await api.get('/trips', { params: filters });
-  return data;
+  const sorted = list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return applyFilters(sorted, filters);
 }
 
 export async function getTripById(id) {
@@ -55,7 +58,14 @@ export async function createTrip(tripData) {
     trips = [newTrip, ...trips];
     return newTrip;
   }
-  const { data } = await api.post('/trips', tripData);
+  const payload = {
+    ...tripData,
+    vehicleId: Number(tripData.vehicleId),
+    driverId: Number(tripData.driverId),
+    plannedDistance: Number(tripData.plannedDistance) || 0,
+    cargoWeight: Number(tripData.cargoWeight) || 0,
+  };
+  const { data } = await api.post('/trips', payload);
   return data;
 }
 
@@ -90,7 +100,11 @@ export async function completeTrip(id, { endOdometer, fuelConsumed }) {
     await updateDriverStatus(trip.driverId, 'Available');
     return trips.find((t) => t.id === id);
   }
-  const { data } = await api.put(`/trips/${id}/complete`, { endOdometer, fuelConsumed });
+  const payload = {
+    endOdometer: Number(endOdometer),
+    fuelConsumed: Number(fuelConsumed),
+  };
+  const { data } = await api.put(`/trips/${id}/complete`, payload);
   return data;
 }
 

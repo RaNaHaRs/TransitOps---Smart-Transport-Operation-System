@@ -45,9 +45,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/dashboard/safety").hasAnyRole("ADMIN", "SAFETY_OFFICER")
                         .requestMatchers("/api/dashboard/finance").hasAnyRole("ADMIN", "FINANCIAL_ANALYST")
                         .requestMatchers("/api/users/me").authenticated()
-                        .requestMatchers("/api/users/**", "/api/vehicles/**", "/api/drivers/**", "/api/trips/**",
-                                "/api/maintenance/**", "/api/fuel/**", "/api/fuel-logs/**", "/api/expenses/**",
-                                "/api/reports/**").hasRole("ADMIN")
+                        .requestMatchers("/api/vehicles/**", "/api/trips/**").hasAnyRole("ADMIN", "DRIVER")
+                        .requestMatchers("/api/users/**", "/api/drivers/**", "/api/maintenance/**", "/api/fuel/**",
+                                "/api/fuel-logs/**", "/api/expenses/**", "/api/reports/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(
                         (request, response, exception) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication is required")))
