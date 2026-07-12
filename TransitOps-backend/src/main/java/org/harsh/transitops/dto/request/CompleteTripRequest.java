@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,14 +19,4 @@ public class CompleteTripRequest {
     @Positive
     private Double endingOdometer;
 
-    @NotNull
-    @Positive
-    private Double fuelUsed;
-
-    @NotNull
-    @Positive
-    private Double fuelCost;
-
-    @NotNull
-    private LocalDateTime endTime;
 }

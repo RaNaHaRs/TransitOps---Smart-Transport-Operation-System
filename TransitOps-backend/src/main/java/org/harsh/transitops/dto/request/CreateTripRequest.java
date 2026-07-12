@@ -31,4 +31,12 @@ public class CreateTripRequest {
     @NotNull
     @Positive
     private Double plannedDistance;
+
+    @NotNull
+    @Positive
+    private Long vehicleId;
+
+    @NotNull
+    @Positive
+    private Long driverId;
 }
