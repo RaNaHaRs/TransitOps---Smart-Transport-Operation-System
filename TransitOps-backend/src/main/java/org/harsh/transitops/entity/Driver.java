@@ -16,7 +16,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -57,6 +59,10 @@ public class Driver {
     @NotNull
     @Enumerated(EnumType.STRING)
     private DriverStatus status;
+
+    @OneToOne(mappedBy = "driver", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private User user;
 
     @JsonIgnore
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
