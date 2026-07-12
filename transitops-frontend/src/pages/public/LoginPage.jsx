@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Truck, Eye, EyeOff, Lock, Mail } from 'lucide-react';
@@ -14,6 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const passwordInputRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('transit_recent_users');
+      if (stored) {
+        setRecentUsers(JSON.parse(stored));
+      }
+    } catch (e) {}
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -33,16 +44,42 @@ export default function LoginPage() {
     }
   }
 
-  async function quickLogin(mockUser) {
-    setLoading(true);
-    try {
-      const user = await login(mockUser.email, mockUser.password);
-      toast.success(`Signed in as ${user.name}`);
-      navigate(ROLE_CONFIG[user.role]?.dashboard || '/');
-    } catch {
-      toast.error('Quick login failed');
-    } finally {
-      setLoading(false);
+  async function handleRecentClick(recentUser) {
+    // Check if the quick login shortcut has expired (1 week)
+    if (recentUser.expiry && Date.now() > recentUser.expiry) {
+      setEmail(recentUser.email);
+      setPassword('');
+      toast.warning('Your quick login shortcut has expired, you need to login again.');
+      if (passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      }
+      return;
+    }
+
+    if (USE_MOCK_DATA) {
+      // Find the mock user to get their password for instant quick login
+      const mUser = mockUsers.find(u => u.email === recentUser.email);
+      if (mUser) {
+        setLoading(true);
+        try {
+          const user = await login(mUser.email, mUser.password);
+          toast.success(`Welcome back, ${user.name}!`);
+          navigate(ROLE_CONFIG[user.role]?.dashboard || '/');
+        } catch {
+          toast.error('Quick login failed');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+    }
+    
+    // Fallback if not mock data or user not found
+    setEmail(recentUser.email);
+    setPassword('');
+    toast.info(`Please enter your password for ${recentUser.name}`);
+    if (passwordInputRef.current) {
+      passwordInputRef.current.focus();
     }
   }
 
@@ -89,6 +126,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                 <input
+                  ref={passwordInputRef}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -120,19 +158,19 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Dev quick-login panel */}
-          {USE_MOCK_DATA && (
+          {/* Recent Logins */}
+          {recentUsers.length > 0 && (
             <div className="mt-6 pt-5 border-t border-neutral-200">
-              <p className="text-xs text-neutral-400 text-center mb-3 font-medium uppercase tracking-wider">Dev mode — quick sign in</p>
+              <p className="text-xs text-neutral-400 text-center mb-3 font-medium uppercase tracking-wider">Recent Logins</p>
               <div className="grid grid-cols-2 gap-2">
-                {mockUsers.map((u) => (
+                {recentUsers.map((u) => (
                   <button
-                    key={u.id}
-                    onClick={() => quickLogin(u)}
+                    key={u.email}
+                    onClick={() => handleRecentClick(u)}
                     disabled={loading}
                     className="text-left px-3 py-2 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    <p className="text-xs font-semibold text-neutral-700">{ROLE_CONFIG[u.role]?.label}</p>
+                    <p className="text-xs font-semibold text-neutral-700">{u.name}</p>
                     <p className="text-[11px] text-neutral-400 truncate">{u.email}</p>
                   </button>
                 ))}
